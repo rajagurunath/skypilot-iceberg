@@ -1,5 +1,6 @@
 import os
 from pyiceberg.catalog.rest import RestCatalog
+from pyiceberg.catalog import load_catalog
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -18,4 +19,22 @@ def load_data_from_r2():
     table = catalog.load_table('bronze.vms')
     con = table.scan().to_duckdb(table_name="vms")
     
+    return con
+
+
+def load_data_from_local():
+    WAREHOUSE_LOCAL = "./tmp/warehouse"
+    os.makedirs(WAREHOUSE_LOCAL, exist_ok=True)
+    
+    catalog = load_catalog(
+        "default",
+        **{
+            "type": "sql",
+            "uri": f"sqlite:///{WAREHOUSE_LOCAL}/pyiceberg_catalog.db",
+            "warehouse": f"file://{WAREHOUSE_LOCAL}",
+        },
+    )
+
+    table = catalog.load_table('skypilot.bronze.vms')
+    con = table.scan().to_duckdb(table_name="vms")
     return con
