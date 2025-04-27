@@ -1,0 +1,8 @@
+SUPABASE_URL=
+SUPABASE_KEY=
+
+R2_WAREHOUSE=s3://your-r2-bucket/path/
+R2_CATALOG_URI=https://your-account-id.r2.cloudflarestorage.com/your-catalog-path
+R2_TOKEN=your-r2-api-token
+
+STORAGE_TARGET=local

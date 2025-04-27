@@ -1,0 +1,54 @@
+# .github/workflows/main.yml
+
+name: Skypilot Iceberg Pipeline
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * *"  # Run daily at 3 AM UTC (customize)
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+      R2_WAREHOUSE: ${{ secrets.R2_WAREHOUSE }}
+      R2_CATALOG_URI: ${{ secrets.R2_CATALOG_URI }}
+      R2_TOKEN: ${{ secrets.R2_TOKEN }}
+      STORAGE_TARGET: r2
+
+    steps:
+      - name: Checkout current repository
+        uses: actions/checkout@v4
+
+      - name: Checkout skypilot-catalog
+        uses: actions/checkout@v4
+        with:
+          repository: 'https://github.com/skypilot-org/skypilot-catalog.git'  # Replace with the actual repo URL
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: skypilot-catalog  # This will clone the repo into a folder named 'another-repo'
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Reconstruct Git Files from Another Repo
+        run: |
+          cd skypilot-catalog  # Navigate to the cloned repo directory
+          python ../scripts/1_reconstruct_git_files.py --repo ./ --output git_file_history.csv --resume
+
+      - name: Bronze Ingestion
+        run: |
+          python scripts/2_convert_to_iceberg.py --csv git_file_history.csv --storage $STORAGE_TARGET
+
+      - name: Silver Update
+        run: |
+          python scripts/3_update_silver.py --storage $STORAGE_TARGET

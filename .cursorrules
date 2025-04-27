@@ -1,0 +1,82 @@
+# Skypilot-Iceberg Project Rules (CursorRules)
+
+## Context
+This project automates the extraction of Git repository file history, ingestion into Apache Iceberg tables (Bronze/Silver), and stores checkpoints in Supabase.
+
+---
+
+## Git File Extraction
+
+- Git file history is extracted **only once** per commit using checkpointing.
+- Extraction happens **locally** via `git ls-files`, `git log`, `git show`.
+- **Checkpoint** is stored in Supabase (`git_checkpoints` table).
+- Script: `scripts/1_reconstruct_git_files.py`
+- Input: `--repo` (local repo path), `--output` (CSV file path)
+- Resume logic is controlled via `--resume` flag.
+
+---
+
+## Bronze Table Ingestion
+
+- Bronze layer is an **append-only** Iceberg table.
+- Ingests all Git history CSV data into `skypilot.bronze.vms`.
+- Timestamps (`created_at`, `updated_at`) must be **timezone naive**.
+- Partitions: Identity partitioning on `cloud`.
+- Script: `scripts/2_convert_to_iceberg.py`
+- Environment: Local or R2 (Cloudflare) selectable by `--storage` flag.
+
+---
+
+## Silver Table Construction
+
+- Silver layer deduplicates Bronze data.
+- Rules for deduplication:
+  - Keep latest row (`created_at`) for each group of (`cloud`, `instanceType`, `Region`, `AvailabilityZone`).
+- Truncates and replaces Silver table on every refresh.
+- Script: `scripts/3_update_silver.py`
+
+---
+
+## Warehouse Storage
+
+- Local development: `./tmp/warehouse` using SQLite catalog.
+- Production cloud (future): R2 Storage with Iceberg REST Catalog.
+
+---
+
+## Makefile Commands
+
+- `make reconstruct` → Run Git extraction
+- `make bronze` → Ingest into Bronze
+- `make silver` → Update Silver
+- `make full-clean` → Reset warehouse
+
+---
+
+## GitHub Actions Pipeline
+
+- Runs automatically on schedule (daily) or manual trigger.
+- Steps:
+  - Checkout project
+  - Checkout another Git repo
+  - Reconstruct history
+  - Bronze ingestion
+  - Silver update
+
+---
+
+## Environment Variables
+
+- `SUPABASE_URL`, `SUPABASE_KEY`
+- `R2_WAREHOUSE`, `R2_CATALOG_URI`, `R2_TOKEN`
+- `STORAGE_TARGET` (`local` or `r2`)
+
+---
+
+## Special Technical Notes
+
+- **Timezone issues**: Always normalize timestamps before inserting into Iceberg.
+- **Index artifacts**: Always `.reset_index(drop=True)` before converting to Arrow tables.
+- **Schema strictness**: All fields must exactly match Iceberg schema or use `union_by_name=True`.
+
+---
