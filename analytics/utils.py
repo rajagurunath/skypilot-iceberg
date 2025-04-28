@@ -18,7 +18,8 @@ def load_data_from_r2():
     )
 
     table = catalog.load_table('bronze.vms')
-    con = table.scan().to_duckdb(table_name="vms")
+    table.location
+    con = table.scan(limit=10000).to_duckdb(table_name="vms")
     
     return con
 
