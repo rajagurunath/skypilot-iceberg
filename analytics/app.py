@@ -63,7 +63,7 @@ elif page == "Dashboard":
     if selected_cloud == "None":
         st.subheader("🌎 Global Cloud KPIs")
 
-        @st.cache_data(ttl=3600)
+        # @st.cache_data(ttl=3600)
         def fetch_global_kpis():
             return con.execute("""
                 SELECT
@@ -82,7 +82,7 @@ elif page == "Dashboard":
         col3.metric("Regions", int(global_kpis['regions'][0]))
         col4.metric("GPU Types", int(global_kpis['gpu_types'][0]))
 
-        @st.cache_data(ttl=3600)
+        # @st.cache_data(ttl=3600)
         def fetch_latest_prices():
             return con.execute("""
                 SELECT
@@ -107,7 +107,7 @@ elif page == "Dashboard":
     else:
         st.subheader(f"🔎 Detailed Metrics for {selected_cloud}")
 
-        @st.cache_data(ttl=3600)
+        # @st.cache_data(ttl=3600)
         def fetch_cloud_kpis(selected_cloud):
             return con.execute("""
                 SELECT
@@ -127,7 +127,7 @@ elif page == "Dashboard":
         col2.metric("GPU Types", int(cloud_kpis['gpu_types'][0]))
         col3.metric("Regions", int(cloud_kpis['regions'][0]))
 
-        @st.cache_data(ttl=3600)
+        # @st.cache_data(ttl=3600)
         def fetch_gpu_types(selected_cloud):
             return con.execute("""
                 SELECT
@@ -152,7 +152,7 @@ elif page == "Dashboard":
         if top_gpus:
             selected_gpu = st.selectbox("Select GPU Accelerator", top_gpus)
 
-            @st.cache_data(ttl=3600)
+            # @st.cache_data(ttl=3600)
             def fetch_gpu_trend(selected_cloud, selected_gpu):
                 return con.execute("""
                     SELECT
@@ -174,7 +174,7 @@ elif page == "Dashboard":
 
         st.subheader("📅 Weekday vs Weekend Analysis")
 
-        @st.cache_data(ttl=3600)
+        # @st.cache_data(ttl=3600)
         def fetch_weekday_vs_weekend(selected_cloud):
             return con.execute("""
                 SELECT
