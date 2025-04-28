@@ -8,3 +8,7 @@ python-dotenv
 gitpython
 streamlit
 duckdb
+plotly
+streamlit-ace
+pyiceberg[sql-sqlite]
+streamlit-extras
