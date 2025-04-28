@@ -11,7 +11,7 @@ class ENV(Enum):
     LOCAL = "local"
     R2 = "r2"
 
-env = ENV.LOCAL
+env = ENV.R2
 
 # --- Load Data ---
 @st.cache_resource(ttl=3600)

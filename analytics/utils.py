@@ -2,12 +2,13 @@ import os
 from pyiceberg.catalog.rest import RestCatalog
 from pyiceberg.catalog import load_catalog
 from dotenv import load_dotenv
+import streamlit as st
 load_dotenv()
 
 def load_data_from_r2():
-    WAREHOUSE = os.getenv("R2_WAREHOUSE", "default_warehouse")
-    TOKEN = os.getenv("R2_TOKEN", "default_token")
-    CATALOG_URI = os.getenv("R2_CATALOG_URI", "https://default.catalog.uri")
+    WAREHOUSE = st.secrets["R2_WAREHOUSE"]
+    TOKEN = st.secrets["R2_TOKEN"]
+    CATALOG_URI = st.secrets["R2_CATALOG_URI"]
 
     catalog = RestCatalog(
         name="default",
