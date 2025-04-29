@@ -23,7 +23,62 @@ def load_data():
     return con
 
 con = load_data()
+@st.cache_data(ttl=3600)
+def fetch_global_kpis():
+    return con.sql("""
+        SELECT
+            COUNT(DISTINCT cloud) as clouds,
+            COUNT(DISTINCT InstanceType) as instance_types,
+            COUNT(DISTINCT Region) as regions,
+            COUNT(DISTINCT AcceleratorName) as gpu_types
+        FROM vms
+    """).to_pandas()
 
+
+@st.cache_data(ttl=3600)
+def fetch_latest_prices():
+    return con.sql("""
+        SELECT
+            cloud,
+            AcceleratorName,
+            AVG(Price) as avg_price,
+            COUNT(DISTINCT InstanceType) as instance_types,
+            COUNT(*) as total_devices
+        FROM vms
+        WHERE AcceleratorName IS NOT NULL
+        GROUP BY cloud, AcceleratorName
+    """).to_pandas()
+
+@st.cache_data(ttl=3600)
+def fetch_cloud_kpis(selected_cloud):
+    return con.sql(f"""
+        SELECT
+            COUNT(DISTINCT InstanceType) as total_instance_types,
+            COUNT(DISTINCT AcceleratorName) as gpu_types,
+            COUNT(DISTINCT Region) as regions,
+            AVG(Price) as avg_price,
+            AVG(SpotPrice) as avg_spot_price
+        FROM vms
+        WHERE cloud = '{selected_cloud}'
+    """).to_pandas()
+
+@st.cache_data(ttl=3600)
+def fetch_gpu_types(selected_cloud):
+    return con.sql(f"""
+        SELECT
+            AcceleratorName,
+            COUNT(*) as device_count,
+            AVG(Price) as avg_price
+        FROM vms
+        WHERE cloud = '{selected_cloud}' AND AcceleratorName IS NOT NULL
+        GROUP BY AcceleratorName
+    """).to_pandas()
+
+@st.cache_data(ttl=3600)
+def get_cloud_list():
+    clouds = con.sql("SELECT distinct cloud FROM vms").to_pandas()
+    return clouds['cloud'].tolist()
+cloudlist = get_cloud_list()
 
 def layout():
 
@@ -54,16 +109,6 @@ def layout():
         st.write("---------------")
         st.subheader("🌎 Global Cloud KPIs")
 
-        # @st.cache_data(ttl=3600)
-        def fetch_global_kpis():
-            return con.sql("""
-                SELECT
-                    COUNT(DISTINCT cloud) as clouds,
-                    COUNT(DISTINCT InstanceType) as instance_types,
-                    COUNT(DISTINCT Region) as regions,
-                    COUNT(DISTINCT AcceleratorName) as gpu_types
-                FROM vms
-            """).to_pandas()
 
         global_kpis = fetch_global_kpis()
 
@@ -73,19 +118,7 @@ def layout():
         col3.metric("Regions", int(global_kpis['regions'][0]))
         col4.metric("GPU Types", int(global_kpis['gpu_types'][0]))
 
-        # @st.cache_data(ttl=3600)
-        def fetch_latest_prices():
-            return con.sql("""
-                SELECT
-                    cloud,
-                    AcceleratorName,
-                    AVG(Price) as avg_price,
-                    COUNT(DISTINCT InstanceType) as instance_types,
-                    COUNT(*) as total_devices
-                FROM vms
-                WHERE AcceleratorName IS NOT NULL
-                GROUP BY cloud, AcceleratorName
-            """).to_pandas()
+       
 
         latest_prices = fetch_latest_prices()
 
@@ -97,8 +130,8 @@ def layout():
 
     # --- Dashboard Page ---
     elif page == "Dashboard":
-        clouds = con.sql("SELECT distinct cloud FROM vms ").to_pandas()
-        cloudlist= clouds['cloud'].tolist()
+        # clouds = con.sql("SELECT distinct cloud FROM vms ").to_pandas()
+        # cloudlist= clouds['cloud'].tolist()
         # cloudlist.insert(0, "None")
         selected_cloud = st.sidebar.selectbox("Choose Cloud Provider", cloudlist,key="cloud_select")
 
@@ -108,18 +141,7 @@ def layout():
 
         st.subheader(f"🔎 Detailed Metrics for {selected_cloud}")
 
-        # @st.cache_data(ttl=3600)
-        def fetch_cloud_kpis(selected_cloud):
-            return con.sql(f"""
-                SELECT
-                    COUNT(DISTINCT InstanceType) as total_instance_types,
-                    COUNT(DISTINCT AcceleratorName) as gpu_types,
-                    COUNT(DISTINCT Region) as regions,
-                    AVG(Price) as avg_price,
-                    AVG(SpotPrice) as avg_spot_price
-                FROM vms
-                WHERE cloud = '{selected_cloud}'
-            """).to_pandas()
+      
 
         cloud_kpis = fetch_cloud_kpis(selected_cloud)
 
@@ -128,18 +150,7 @@ def layout():
         col2.metric("GPU Types", int(cloud_kpis['gpu_types'][0]))
         col3.metric("Regions", int(cloud_kpis['regions'][0]))
 
-        # @st.cache_data(ttl=3600)
-        def fetch_gpu_types(selected_cloud):
-            return con.sql(f"""
-                SELECT
-                    AcceleratorName,
-                    COUNT(*) as device_count,
-                    AVG(Price) as avg_price
-                FROM vms
-                WHERE cloud = '{selected_cloud}' AND AcceleratorName IS NOT NULL
-                GROUP BY AcceleratorName
-            """).to_pandas()
-
+       
         gpu_types = fetch_gpu_types(selected_cloud)
 
         fig = px.bar(gpu_types, x="AcceleratorName", y="avg_price", color="device_count",
@@ -173,7 +184,7 @@ def layout():
             fig.update_layout(template="plotly_dark", title="Price vs Spot Price Trend")
             st.plotly_chart(fig, use_container_width=True)
 
-        st.subheader("📅 Weekday vs Weekend Analysis")
+        # st.subheader("📅 Weekday vs Weekend Analysis")
 
         # # @st.cache_data(ttl=3600)
         # def fetch_weekday_vs_weekend(selected_cloud):
