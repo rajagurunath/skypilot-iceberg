@@ -18,10 +18,17 @@ def load_data_from_r2():
     )
 
     table = catalog.load_table('bronze.vms')
-    table.location
-    con = table.scan(limit=10000).to_duckdb(table_name="vms")
+    import daft
+    from daft import Session
+
+    df = daft.read_iceberg(table)
+    sess = Session()
+
+    sess.create_temp_table("vms", df)
+
+    # con = table.scan().to_duckdb(table_name="vms")
     
-    return con
+    return sess
 
 
 def load_data_from_local():
@@ -38,5 +45,13 @@ def load_data_from_local():
     )
 
     table = catalog.load_table('skypilot.bronze.vms')
-    con = table.scan().to_duckdb(table_name="vms")
-    return con
+    import daft
+    from daft import Session
+
+    df = daft.read_iceberg(table)
+    sess = Session()
+
+    sess.create_temp_table("vms", df)
+
+    # con = table.scan().to_duckdb(table_name="vms")
+    return sess

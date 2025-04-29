@@ -12,3 +12,4 @@ plotly
 streamlit-ace
 pyiceberg[sql-sqlite]
 streamlit-extras
+daft

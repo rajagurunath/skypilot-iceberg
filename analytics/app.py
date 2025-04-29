@@ -24,55 +24,46 @@ def load_data():
 
 con = load_data()
 
-# --- Sidebar Page Selection ---
-st.sidebar.title("☁️ Cloud Selection & SQL Playground")
-page = st.sidebar.radio("Select Page", ["Home", "Dashboard", "SQL Editor"])
 
-# --- Home Page / README ---
-if page == "Home":
-    st.title("📚 Welcome to GPU & CPU Price Analytics Dashboard!")
+def layout():
 
-    st.markdown("""
-    ### What this app offers:
-    - View real-time **GPU & CPU prices** across **16+ cloud providers**.
-    - Deep dive into specific cloud providers' offerings.
-    - Analyze trends, spot prices, and historical shifts.
-    - Run **your own SQL queries** against the dataset in a live SQL editor.
-    - Instantly compare **weekday vs weekend** price behaviors.
+    # --- Sidebar Page Selection ---
+    st.sidebar.title("☁️ Cloud Selection & SQL Playground")
+    page = st.sidebar.radio("Select Page", ["Home", "Dashboard", "SQL Editor"])
+    if page == "Home":
+        st.title("📚 Welcome to GPU & CPU Price Analytics Dashboard!")
 
-    All Thanks to [Skypilot-Catalog](https://github.com/skypilot-org/skypilot-catalog)! 🚀 
-                
-    **Built using**:
-    - Skypilot-Catalog
-    - Streamlit
-    - DuckDB
-    - Iceberg Table Format
-    - Cloudflare R2 (for cost-efficient storage)
-    
-    """)
+        st.markdown("""
+        ### What this app offers:
+        - View real-time **GPU & CPU prices** across **16+ cloud providers**.
+        - Deep dive into specific cloud providers' offerings.
+        - Analyze trends, spot prices, and historical shifts.
+        - Run **your own SQL queries** against the dataset in a live SQL editor.
+        - Instantly compare **weekday vs weekend** price behaviors.
 
-# --- Dashboard Page ---
-elif page == "Dashboard":
-    clouds = con.execute("SELECT DISTINCT cloud FROM vms ORDER BY 1").fetchall()
-    clouds = [c[0] for c in clouds]
-    clouds.insert(0, "None")  # Insert 'None'
-    selected_cloud = st.sidebar.selectbox("Choose Cloud Provider", clouds)
-
-    st.title("💸 GPU & CPU Price Analytics Dashboard")
-
-    if selected_cloud == "None":
+        All Thanks to [Skypilot-Catalog](https://github.com/skypilot-org/skypilot-catalog)! 🚀 
+                    
+        **Built using**:
+        - Skypilot-Catalog
+        - Streamlit
+        - DuckDB
+        - Iceberg Table Format
+        - Cloudflare R2 (for cost-efficient storage)
+        
+        """)
+        st.write("---------------")
         st.subheader("🌎 Global Cloud KPIs")
 
         # @st.cache_data(ttl=3600)
         def fetch_global_kpis():
-            return con.execute("""
+            return con.sql("""
                 SELECT
                     COUNT(DISTINCT cloud) as clouds,
                     COUNT(DISTINCT InstanceType) as instance_types,
                     COUNT(DISTINCT Region) as regions,
                     COUNT(DISTINCT AcceleratorName) as gpu_types
                 FROM vms
-            """).fetch_df()
+            """).to_pandas()
 
         global_kpis = fetch_global_kpis()
 
@@ -84,7 +75,7 @@ elif page == "Dashboard":
 
         # @st.cache_data(ttl=3600)
         def fetch_latest_prices():
-            return con.execute("""
+            return con.sql("""
                 SELECT
                     cloud,
                     AcceleratorName,
@@ -94,22 +85,32 @@ elif page == "Dashboard":
                 FROM vms
                 WHERE AcceleratorName IS NOT NULL
                 GROUP BY cloud, AcceleratorName
-            """).fetch_df()
+            """).to_pandas()
 
         latest_prices = fetch_latest_prices()
 
         fig = px.scatter(latest_prices, x="AcceleratorName", y="avg_price", color="cloud",
-                         size="total_devices",
-                         title="Average GPU Prices by Cloud")
+                            size="total_devices",
+                            title="Average GPU Prices by Cloud")
         with chart_container(latest_prices):
             st.plotly_chart(fig, use_container_width=True)
 
-    else:
+    # --- Dashboard Page ---
+    elif page == "Dashboard":
+        clouds = con.sql("SELECT distinct cloud FROM vms ").to_pandas()
+        cloudlist= clouds['cloud'].tolist()
+        # cloudlist.insert(0, "None")
+        selected_cloud = st.sidebar.selectbox("Choose Cloud Provider", cloudlist,key="cloud_select")
+
+        st.title("💸 GPU & CPU Price Analytics Dashboard")
+
+        
+
         st.subheader(f"🔎 Detailed Metrics for {selected_cloud}")
 
         # @st.cache_data(ttl=3600)
         def fetch_cloud_kpis(selected_cloud):
-            return con.execute("""
+            return con.sql(f"""
                 SELECT
                     COUNT(DISTINCT InstanceType) as total_instance_types,
                     COUNT(DISTINCT AcceleratorName) as gpu_types,
@@ -117,8 +118,8 @@ elif page == "Dashboard":
                     AVG(Price) as avg_price,
                     AVG(SpotPrice) as avg_spot_price
                 FROM vms
-                WHERE cloud = ?
-            """, (selected_cloud,)).fetch_df()
+                WHERE cloud = '{selected_cloud}'
+            """).to_pandas()
 
         cloud_kpis = fetch_cloud_kpis(selected_cloud)
 
@@ -129,20 +130,20 @@ elif page == "Dashboard":
 
         # @st.cache_data(ttl=3600)
         def fetch_gpu_types(selected_cloud):
-            return con.execute("""
+            return con.sql(f"""
                 SELECT
                     AcceleratorName,
                     COUNT(*) as device_count,
                     AVG(Price) as avg_price
                 FROM vms
-                WHERE cloud = ? AND AcceleratorName IS NOT NULL
+                WHERE cloud = '{selected_cloud}' AND AcceleratorName IS NOT NULL
                 GROUP BY AcceleratorName
-            """, (selected_cloud,)).fetch_df()
+            """).to_pandas()
 
         gpu_types = fetch_gpu_types(selected_cloud)
 
         fig = px.bar(gpu_types, x="AcceleratorName", y="avg_price", color="device_count",
-                     title="Average Price per GPU Type", template="plotly_dark")
+                        title="Average Price per GPU Type", template="plotly_dark")
         st.plotly_chart(fig, use_container_width=True)
 
         st.subheader("📈 Price Trends")
@@ -154,15 +155,15 @@ elif page == "Dashboard":
 
             # @st.cache_data(ttl=3600)
             def fetch_gpu_trend(selected_cloud, selected_gpu):
-                return con.execute("""
+                return con.sql(f"""
                     SELECT
                         date,
                         Price,
                         SpotPrice
                     FROM vms
-                    WHERE cloud = ? AND AcceleratorName = ?
+                    WHERE cloud = '{selected_cloud}' AND AcceleratorName = '{selected_gpu}'
                     ORDER BY date ASC
-                """, (selected_cloud, selected_gpu)).fetch_df()
+                """).to_pandas()
 
             gpu_trend_df = fetch_gpu_trend(selected_cloud, selected_gpu)
 
@@ -174,43 +175,43 @@ elif page == "Dashboard":
 
         st.subheader("📅 Weekday vs Weekend Analysis")
 
-        # @st.cache_data(ttl=3600)
-        def fetch_weekday_vs_weekend(selected_cloud):
-            return con.execute("""
-                SELECT
-                    CASE WHEN weekday(strptime(date,'%Y-%m-%d %H:%M:%S')) IN (0,6) THEN 'Weekend' ELSE 'Weekday' END as day_type,
-                    AVG(Price) as avg_price,
-                    AVG(SpotPrice) as avg_spot_price
-                FROM vms
-                WHERE cloud = ?
-                GROUP BY day_type
-            """, (selected_cloud,)).fetch_df()
+        # # @st.cache_data(ttl=3600)
+        # def fetch_weekday_vs_weekend(selected_cloud):
+        #     return con.sql(f"""
+        #         SELECT
+        #             CASE WHEN day_of_week(date) IN (0,6) THEN 'Weekend' ELSE 'Weekday' END as day_type,
+        #             AVG(Price) as avg_price,
+        #             AVG(SpotPrice) as avg_spot_price
+        #         FROM vms
+        #         WHERE cloud = '{selected_cloud}'
+        #         GROUP BY day_type
+        #     """).to_pandas()
 
-        weekday_weekend_df = fetch_weekday_vs_weekend(selected_cloud)
+        # weekday_weekend_df = fetch_weekday_vs_weekend(selected_cloud)
 
-        fig = px.bar(weekday_weekend_df, x="day_type", y=["avg_price", "avg_spot_price"], barmode="group",
-                     title="Weekday vs Weekend Prices", template="plotly_dark")
-        st.plotly_chart(fig, use_container_width=True)
+        # fig = px.bar(weekday_weekend_df, x="day_type", y=["avg_price", "avg_spot_price"], barmode="group",
+        #              title="Weekday vs Weekend Prices", template="plotly_dark")
+        # st.plotly_chart(fig, use_container_width=True)
 
-# --- SQL Editor ---
-elif page == "SQL Editor":
-    st.title("📝 SQL Editor for Analyzing GPU Availability")
-    st.markdown("Run your SQL queries against the dataset (table name: `vms`)")
-    query = st_ace(language="sql", theme="monokai", height=300,placeholder="SELECT * FROM vms WHERE cloud = 'aws'")
+    # --- SQL Editor ---
+    elif page == "SQL Editor":
+        st.title("📝 SQL Editor for Analyzing GPU Availability")
+        st.markdown("Run your SQL queries against the dataset (table name: `vms`)")
+        query = st_ace(language="sql", theme="monokai", height=300,placeholder="SELECT * FROM vms WHERE cloud = 'aws'")
 
 
-    if query:
-        try:
-            with st.spinner('Executing your query...'):
-                result = con.execute(query).fetch_df()
-                if len(result) > 500:
-                    st.warning(f"Showing first 500 rows out of {len(result)}.")
-                    result = result.head(500)
-            with chart_container(result):
-                st.dataframe(result, use_container_width=True)
-        except Exception as e:
-            st.error(f"Error running query: {e}")
-
+        if query:
+            try:
+                with st.spinner('Executing your query...'):
+                    result = con.sql(query).to_pandas()
+                    if len(result) > 500:
+                        st.warning(f"Showing first 500 rows out of {len(result)}.")
+                        result = result.head(500)
+                with chart_container(result):
+                    st.dataframe(result, use_container_width=True)
+            except Exception as e:
+                st.error(f"Error running query: {e}")
+layout()
 # --- Footer ---
 st.markdown("---")
 st.markdown("Built with ❤️ using Skypilot-Catalog, Streamlit, DuckDB, Iceberg, and R2 Catalogs.")
