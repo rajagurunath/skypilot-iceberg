@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "boto3>=1.38.3",
+    "daft>=0.4.10",
     "duckdb>=1.2.2",
     "fastparquet>=2024.11.0",
     "gitpython>=3.1.44",

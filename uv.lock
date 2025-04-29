@@ -399,6 +399,24 @@ wheels = [
 ]
 
 [[package]]
+name = "daft"
+version = "0.4.10"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "fsspec" },
+    { name = "pyarrow" },
+    { name = "tqdm" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/2b/28/557544b14eececb37acbf1811d2dd0a91d53a684e49d0c6cc6f4d2db9449/daft-0.4.10.tar.gz", hash = "sha256:6f407201d597f809627816353e98f7cb331e3b153a252d00a323ced92a0c258b", size = 4811698 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/09/cc/44c4c628025845b27e30100c99ef6436bcd7634b47b92b58f5c697d7e17c/daft-0.4.10-cp39-abi3-macosx_10_12_x86_64.whl", hash = "sha256:2b3525e780855fb81da7b4cd290bd185308544d26c3be62a062a23b9903b58fc", size = 36148965 },
+    { url = "https://files.pythonhosted.org/packages/96/d4/ede062304046891275f70decf6e2e1be3510d626ac4891f57e2b1f663269/daft-0.4.10-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:ce10318d4d26319717614a41d0f502ff387f543c5c0d85ac5507b8df9e73339a", size = 33426322 },
+    { url = "https://files.pythonhosted.org/packages/bb/48/2e9a7eaa2797d45a548257ad7af8605566ac642da79cecbd10ca3492583c/daft-0.4.10-cp39-abi3-manylinux_2_28_aarch64.whl", hash = "sha256:8816d35e4ef6be6f08d38d0e2d5d4490fdea857252961bab2c1d8b707ff86f6c", size = 36758826 },
+    { url = "https://files.pythonhosted.org/packages/8d/55/e6ab78f1163b4e57e0459fc21d7c8885218611cdf9d5d9ed495df51664eb/daft-0.4.10-cp39-abi3-manylinux_2_28_x86_64.whl", hash = "sha256:455e5b21adce545a0334940409a8173ab83054c0eea211ff19975e43a1800545", size = 38589110 },
+    { url = "https://files.pythonhosted.org/packages/0c/3f/52a6191c294f90c2864cae8ed7f2403f00bc41f5c2a6e05b78d2ff8b9b4a/daft-0.4.10-cp39-abi3-win_amd64.whl", hash = "sha256:8c5883ea972f2685602cf86b51ee9bc09ddf1a52ba6133096527145cc1a6ef4a", size = 35365640 },
+]
+
+[[package]]
 name = "deprecation"
 version = "2.1.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2007,6 +2025,7 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "boto3" },
+    { name = "daft" },
     { name = "duckdb" },
     { name = "fastparquet" },
     { name = "gitpython" },
@@ -2023,6 +2042,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "boto3", specifier = ">=1.38.3" },
+    { name = "daft", specifier = ">=0.4.10" },
     { name = "duckdb", specifier = ">=1.2.2" },
     { name = "fastparquet", specifier = ">=2024.11.0" },
     { name = "gitpython", specifier = ">=3.1.44" },
@@ -2416,6 +2436,18 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/2b/ae/c1b22d4524b0e10da2f29a176fb2890386f7bd1f63aacf186444873a88a0/tornado-6.4.2-cp38-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:932d195ca9015956fa502c6b56af9eb06106140d844a335590c1ec7f5277d10c", size = 437261 },
     { url = "https://files.pythonhosted.org/packages/b5/25/36dbd49ab6d179bcfc4c6c093a51795a4f3bed380543a8242ac3517a1751/tornado-6.4.2-cp38-abi3-win32.whl", hash = "sha256:2876cef82e6c5978fde1e0d5b1f919d756968d5b4282418f3146b79b58556482", size = 438463 },
     { url = "https://files.pythonhosted.org/packages/61/cc/58b1adeb1bb46228442081e746fcdbc4540905c87e8add7c277540934edb/tornado-6.4.2-cp38-abi3-win_amd64.whl", hash = "sha256:908b71bf3ff37d81073356a5fadcc660eb10c1476ee6e2725588626ce7e5ca38", size = 438907 },
+]
+
+[[package]]
+name = "tqdm"
+version = "4.67.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "colorama", marker = "sys_platform == 'win32'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a8/4b/29b4ef32e036bb34e4ab51796dd745cdba7ed47ad142a9f4a1eb8e0c744d/tqdm-4.67.1.tar.gz", hash = "sha256:f8aef9c52c08c13a65f30ea34f4e5aac3fd1a34959879d7e59e63027286627f2", size = 169737 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d0/30/dc54f88dd4a2b5dc8a0279bdd7270e735851848b762aeb1c1184ed1f6b14/tqdm-4.67.1-py3-none-any.whl", hash = "sha256:26445eca388f82e72884e0d580d5464cd801a3ea01e63e5601bdff9ba6a48de2", size = 78540 },
 ]
 
 [[package]]
