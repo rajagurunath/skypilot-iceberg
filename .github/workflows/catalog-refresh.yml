@@ -28,7 +28,7 @@ jobs:
         with:
           repository: skypilot-org/skypilot-catalog 
           token: ${{ secrets.GITHUB_TOKEN }}
-          path: skypilot-catalog  # This will clone the repo into a folder named 'another-repo'
+          path: skypilot-catalog 
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -42,8 +42,10 @@ jobs:
 
       - name: Reconstruct Git Files from Another Repo
         run: |
-          cd skypilot-catalog  # Navigate to the cloned repo directory
-          python ../scripts/1_reconstruct_git_files.py --repo ./ --output git_file_history.csv --resume
+          # cd skypilot-catalog  # Navigate to the cloned repo directory
+          ls ./
+          ls ../skypilot-catalog/
+          python scripts/1_reconstruct_git_files.py --repo  ../skypilot-catalog/ --output git_file_history.csv --resume
 
       - name: Bronze Ingestion
         run: |
