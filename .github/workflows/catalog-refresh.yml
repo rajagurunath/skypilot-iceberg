@@ -44,7 +44,8 @@ jobs:
         run: |
           # cd skypilot-catalog  # Navigate to the cloned repo directory
           ls ./
-          python scripts/1_reconstruct_git_files.py --repo  skypilot-catalog/ --output git_file_history.csv --resume
+          ls skypilot-catalog/
+          python scripts/1_reconstruct_git_files.py --repo  skypilot-catalog/skypilot-catalog --output git_file_history.csv --resume
 
       - name: Bronze Ingestion
         run: |
