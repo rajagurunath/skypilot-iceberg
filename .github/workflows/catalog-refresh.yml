@@ -26,7 +26,7 @@ jobs:
       - name: Checkout skypilot-catalog
         uses: actions/checkout@v4
         with:
-          repository: skypilot-org/skypilot-catalog.git 
+          repository: skypilot-org/skypilot-catalog 
           token: ${{ secrets.GITHUB_TOKEN }}
           path: skypilot-catalog  # This will clone the repo into a folder named 'another-repo'
 
