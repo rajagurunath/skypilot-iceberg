@@ -48,6 +48,7 @@ jobs:
 
       - name: Bronze Ingestion
         run: |
+          cat git_file_history.csv
           python scripts/2_convert_to_iceberg.py --csv git_file_history.csv --storage $STORAGE_TARGET
 
       - name: Silver Update
