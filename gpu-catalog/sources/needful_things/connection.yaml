@@ -1,0 +1,5 @@
+# This file was automatically generated
+name: gpu_catalog
+type: duckdb
+options:
+  filename: gpu_catalog.duckdb
